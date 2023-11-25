@@ -1,6 +1,9 @@
 import os
 import json
 
+if not os.path.exists('json'):
+   os.makedirs('json')
+
 def merge_json_files(directory, output_file, year=2023):
     merged_data = {}
 
@@ -24,5 +27,5 @@ def merge_json_files(directory, output_file, year=2023):
 # Example usage
 # Assuming the current directory is the desired location for the output file
 current_directory = os.getcwd()
-output_file_path = os.path.join(current_directory, 'merged.json')
+output_file_path = os.path.join(current_directory, 'json', 'merged.json')
 merge_json_files(current_directory, output_file_path)
