@@ -1,9 +1,9 @@
 import requests
 from bs4 import BeautifulSoup
 import json
+import datetime
+import calendar
 
-section_dish = {}
-meal_section = {}
 
 def update_dict(dicts, key, value):
     if key in dicts:
@@ -17,7 +17,7 @@ def update_dict(dicts, key, value):
         dicts[key] = value
 
 
-def fetch_menu(url):
+def fetch_menu(url, section_dish):
     response = requests.get(url)
     if response.status_code != 200:
         print('Failed to retrieve the webpage')
@@ -52,7 +52,7 @@ def update_dict(dicts, key, value):
         # Create the key with the value
         dicts[key] = value
 
-def fetch_menu1(url):
+def fetch_menu1(url, meal_section):
     response = requests.get(url)
     if response.status_code != 200:
         print('Failed to retrieve the webpage')
@@ -78,7 +78,7 @@ def fetch_menu1(url):
             # print('  Section:', current_section)
             update_dict(meal_section, current_meal, current_section)
 
-def create_meal_structure(meal_to_sections, section_to_dishes):
+def create_meal_structure(meal_to_sections, section_to_dishes, month = 11, day = 1):
     structured_data = {}
 
     for meal, sections in meal_to_sections.items():
@@ -89,18 +89,51 @@ def create_meal_structure(meal_to_sections, section_to_dishes):
             structured_data[meal][section] = list(dishes)
 
     # Writing to a JSON file
-    with open('meal_structure.json', 'w') as file:
+    file_name = str(month) + '_' + str(day) + '.' + 'json'
+    with open(file_name, 'w') as file:
         json.dump(structured_data, file, indent=4)
 
     print("Meal structure written to 'meal_structure.json'")
 
-url = 'https://foodpro.ucr.edu/foodpro/shortmenu.asp?sName=University%20of%20California%2C%20Riverside%20Dining%20Services&locationNum=03&locationName=Glasgow&naFlag=1'
-fetch_menu(url)
 
-# print(section_dish)
 
-fetch_menu1(url)
+def generate_ucr_dining_urls(month, year=2023):
+    """
+    Generates URLs for the UCR dining services menu for each day in the specified month.
 
-# print(meal_section)
+    Args:
+    month (int): The month for which URLs are to be generated.
+    year (int, optional): The year for which URLs are to be generated. Defaults to 2023.
 
-create_meal_structure(meal_section, section_dish)
+    Returns:
+    list: A list of URLs for each day of the specified month.
+    """
+    base_url = "https://foodpro.ucr.edu/foodpro/shortmenu.asp?sName=University+of+California%2C+Riverside+Dining+Services&locationNum=03&locationName=Glasgow&naFlag=1&WeeksMenus=This+Week%27s+Menus&myaction=read&dtdate="
+    urls = []
+
+    # Calculate the number of days in the specified month
+    _, num_days = calendar.monthrange(year, month)
+
+    # Generate URLs for each day of the month
+    for day in range(1, num_days + 1):
+        date_str = f"{month}/{day}/{year}"
+        full_url = base_url + date_str
+        urls.append(full_url)
+
+    return urls
+
+# Example usage
+urls_november = generate_ucr_dining_urls(11)  # URLs for November
+urls_december = generate_ucr_dining_urls(12)  # URLs for December
+
+date_str = []
+for i in range(len(urls_november)):
+    url = urls_november[i]
+    section_dish = {}
+    meal_section = {}
+    # urls_november[:5], urls_december[:5]  # Display the first 5 URLs for each month
+    fetch_menu(url, section_dish)
+    fetch_menu1(url, meal_section)
+    create_meal_structure(meal_section, section_dish, 11, i + 1)
+ 
+
